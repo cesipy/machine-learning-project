@@ -1,6 +1,7 @@
 
 from utils import count_frauds, augment_train_data
 
+from dataclasses import dataclass
 import pickle
 import pandas as pd
 import argparse
@@ -12,7 +13,20 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 
 from matplotlib import pyplot
 
-def main(model_args):
+@dataclass
+class ModelArgs:
+    train_data_file : str
+    model_out_file : str
+    criterion : str = "gini"
+    splitter : str = "best"
+    max_depth : int = None
+    max_features : int = None
+    random_state : int = None
+    ccp_alpha : float = 0.0
+    min_impurity_decrease : float = 0.0
+    train : bool = False
+
+def main(model_args: ModelArgs):
     train_data = pd.read_csv(model_args.train_data_file)
 
     X = train_data.drop(columns = ["Class", "Time"])
@@ -38,10 +52,8 @@ def main(model_args):
         # Fit the model
         model.fit(X_train_scaled, y_train)
 
-        print("Plotting tree")
-        fig = pyplot.figure(figsize = (25, 20))
-        _ = plot_tree(model) #, feature_names = X.columns.values)
-        _ = input()
+        # fig = pyplot.figure(figsize = (25, 20))
+        # _ = plot_tree(model) feature_names = X.columns.values)
     else:
         file = open(model_args.model_out_file, "rb")
         model = pickle.load(file)
@@ -58,7 +70,7 @@ def main(model_args):
     print(f"Classification Report:\n{classification_report(y_test, y_pred)}")
     print(f"Confusion Matrix:\n{confusion_matrix(y_test, y_pred)}\n")
 
-    if not model_args.train:
+    if model_args.train:
         file = open(model_args.model_out_file, "wb+")
         pickle.dump(model, file)
         file.close
