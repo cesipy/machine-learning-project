@@ -37,7 +37,8 @@ def objective(trial):
 
     X_train, X_test = train_test_split(numpy_data, test_size=0.3, random_state=10)
 
-    X_train = augment_train_data(X_train, factor=50)
+    factor = trial.suggest_int('factor', 1, 40)
+    X_train = augment_train_data(X_train, factor=factor)
     frauds_train = count_frauds(X_train)
     frauds_test  = count_frauds(X_test)
     print(f"frauds in train: {frauds_train}\nfrauds in test: {frauds_test}")
@@ -65,7 +66,7 @@ def objective(trial):
     # hyperparameters
     hidden_dim = trial.suggest_int('hidden_dim', 64, 256)
     lr = trial.suggest_float('lr', 1e-5, 1e-2, log=True)
-    epochs = trial.suggest_int('epochs', 10, 50)
+    epochs = trial.suggest_int('epochs', 36, 60)
     
     model = init_model(input_dim, hidden_dim)
     
