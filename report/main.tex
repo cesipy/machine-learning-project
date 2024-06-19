@@ -107,6 +107,41 @@ The second chance was a decision tree. In order to achieve even better results, 
 
 \section{Implementation / ML Process}
 \label{sec:methods}
+As mentioned in the introduction the dataset is highly imbalanced. There are 227845 datapoints and less than 500 are fraudulent. This is about 0.173\% of the dataset. 
+A naive implementation of the neural network was not able to detect frauds corretly. With an accuracy of 99.83\% most likely the frauds were not detected. 
+In order to solve this problem, we decided to do simple data augmentation. As other methods were not adequate, we simply duplicated the fraudulent transactions.
+This was done the following way: The dataset was split into train and validation set. Then the fraudulent transactions in the train set were duplicated randomly by a factor. 
+Using this augmentation method it was possbile to give the frauds more weight in the train set, without changing the validation set. 
+Additionally we scaled the data using a normalization method. This functionality is achieved by calling scikit-learn's `StandardScaler`. 
+
+The timestamp in the dataset was removed as it is most likely not important. 
+For the problem we used two Methods: Multilayer Perceptron and Decision Tree. 
+
+\subsection{Multilayer Perceptron}
+We used a Neural Network for the classification task. The Neural Network is based on `pytorch`'s `nn.Module`. For the Network there are three layers. 
+A input layer with 30 nodes, a hidden layer with dimensionality 94 and a learning rate of 0.0004301150216793739. 
+The activation function is a ReLU function. The output layer has one node and a sigmoid activation function. % überprüfen!!
+
+A Neural Network is suitable for this problem as it can learn complex patterns and extract the most important features from the data. 
+We don't have any information about the features, so a Neural Network is a good choice. The programmer does not have to make any choices concerning the features. 
+The dataset contains labeled data, so supervised learning and thus neural networks seem a good option.
+
+
+The choice of hyperparameters was really important and made a difference. In this case the hyperparameters where factor for data augmentation, number of nodes in hidden layer, learning rate and learning epochs. 
+To find the best hyperparameters we used brute force method to train using randomly selected parameters. The parameters where randomly selected from a specified range. 
+Given the results the best hyperparameters where chosen. 
+The final hyperparameters are: factor for data augmentation: 50, number of nodes in hidden layer: 94, learning rate: 0.0004301150216793739, learning epochs: 36.  % TODO: adjust
+
+
+
+\subsection{Decision Tree}
+The Decision Tree is based on the `sklearn` library. The Decision Tree is a simple model that can be used for classification tasks. 
+\dots
+%TODO: David
+
+Further we tested a modification of decision trees - the random forest classification. This method is based on the decision tree, but uses multiple trees to improve the accuracy. 
+The accuracy was about 99.959\% and the model was able to detect the frauds. This is about the same as the accuracy of the decision tree. 
+
 
 {\color{blue}
 
@@ -121,6 +156,19 @@ The second chance was a decision tree. In order to achieve even better results, 
 
 \section{Results}
 \label{sec:results}
+For the MLP model the final accuracy on the validation set was 99.9414\%, while the train accuracy is only about 98\%. 
+This rather bad accuracyon the train set is caused by the data augmentation. Nevertheless, the model is able to detect the frauds in the validatoion set, this is whats important. 
+
+
+
+The decision tree impelentation has a validation accuracy of 99.96\%. The train accuracy is about... % to inset
+
+As a naive baseline predictor we present a model that only outputs 0, means no fraud. 
+Because the dataset is imbalanced and data augmentaiton does not affect the validation set there are only maximum only 0.15\% frauds in the validation set. 
+Thus the naive predictor has a accuracy of at least 99.85\%. 
+Both implementations are significantly better than the naive baseline predictor. The decision tree and random forest classification are able to detect the frauds. 
+
+
 
 {\color{blue}
 
@@ -135,6 +183,9 @@ The second chance was a decision tree. In order to achieve even better results, 
 
 \section{Discussion}
 \label{sec:discuss}
+As mentioned above, our models are significantly better than a model that only predicts no fraudulent transactions.
+With an accuracy of 99.96 \% the decision tree and random forest classification are able to detect some of the frauds. 
+However as there is still  
 
 {\color{blue}
 \begin{itemize}

@@ -18,15 +18,17 @@ from utils import count_frauds, augment_train_data
 #     lr: 0.0004301150216793739
 #     epochs: 36
 
-EPOCHS = 30
-BATCH_SIZE = 32
+EPOCHS        = 36
+BATCH_SIZE    = 32
+HIDDEN_DIM    = 94
+LEARNING_RATE = 0.0004301150216793739
 
 class TransactionModel(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, hidden_dim):
         super(TransactionModel, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 128)
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(128, 2)
+        self.fc2 = nn.Linear(hidden_dim, 2)
         
     def forward(self, x):
         x = self.fc1(x)
@@ -34,8 +36,8 @@ class TransactionModel(nn.Module):
         x = self.fc2(x)
         return x
 
-def init_model(input_dim):
-    model = TransactionModel(input_dim)
+def init_model(input_dim, hidden_dim):
+    model = TransactionModel(input_dim, hidden_dim)
     return model
 
 def main():
@@ -70,7 +72,7 @@ def main():
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
     input_dim = X_train.shape[1]
-    model = init_model(input_dim)
+    model = init_model(input_dim, HIDDEN_DIM)
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
