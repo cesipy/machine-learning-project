@@ -8,8 +8,17 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from utils import count_frauds, augment_train_data
 
-EPOCHS = 30
+# hyperparameter learned using optuna package
+# tuned params: hidden_dim, learning_rate and epochs
+# Test Accuracy: 0.9989
+# Best trial:
+#   Value: 0.9994148111302923
+#   Params: 
+#     hidden_dim: 94
+#     lr: 0.0004301150216793739
+#     epochs: 36
 
+EPOCHS = 30
 BATCH_SIZE = 32
 
 class TransactionModel(nn.Module):

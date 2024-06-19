@@ -85,7 +85,17 @@ Matrikel Nr.: 12211124\\
 
 \section{Introduction}
 \label{sec:intro}
+The task of this project is to implement machine learning models to detect fraudulent transactoins. 
+The problem type is a binary classification task. Based on the timestamp, value of transactions and 28 features the model should predict if a transaction is fraudulent or not. 
+The dataset consists of 227845 instances with 30 features and flag indicating if the transaction is fraudulent or not. The dataset is highly imbalanced with 0.15\% % is this right??
+of the transactions being fraudulent. There is no information about the 28 features, so it is not clear what they represent. 
 
+As there the dataset is labelled, we can use supervised learning to solve this problem. We decided two use two methods for this problem. 
+The first choice was to use a neural network for this task. Neural networks can extract the most important features from the data and are able to learn complex patterns. 
+The second chance was a decision tree. In order to achieve even better results, we also implemeted a random forest classification.
+
+
+ 
 {\color{blue}
 
 \begin{itemize}
