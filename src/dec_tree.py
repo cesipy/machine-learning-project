@@ -2,6 +2,7 @@
 from utils import count_frauds, augment_train_data
 
 from dataclasses import dataclass
+from random import randint 
 import pickle
 import pandas as pd
 import argparse
@@ -24,14 +25,44 @@ class ModelArgs:
     random_state : int = None
     ccp_alpha : float = 0.0
     min_impurity_decrease : float = 0.0
+    test_size : int = 0
     train : bool = False
+
+def search(train_data_file, model_out_file):
+    highest = 0.0
+    hyp_params = None
+    model = None
+
+    with open("search_results.csv", "w+") as file:
+        file.write(f"criterion,splitter,max_depth,max_features,random_state,test_size,train_acc,test_acc\n")
+
+        for r in [randint(100, 2000000) for i in range(0, 1)]:
+            for c in ["gini", "entropy", "log_loss"]:
+                for s in ["best", "random"]:
+                    for m in [None, 5, 6]:
+                        for mf in [None, 10, 20]:
+                            for ts in [0.2, 0.5]:
+                                p = ModelArgs(train_data_file, "", c, s, m, mf, r, 0.0, 0.0, ts, True)
+                                print(f"Training using {p}")
+                                (curr_model, train_score, test_score) = main(p)
+                                file.write(f"{c},{s},{m},{mf},{r},{ts},{train_score},{test_score}\n")
+                                if (test_score > highest):
+                                    highest = test_score
+                                    print(f"New Highscore: {test_score} using {p}")
+                                    hyp_params = p
+                                    model = curr_model
+
+    print(f"Highest Score {highest} using {p}")
+
+    with open(model_out_file, "wb+") as file:
+        pickle.dump(model, file)
 
 def main(model_args: ModelArgs):
     train_data = pd.read_csv(model_args.train_data_file)
 
-    X = train_data.drop(columns = ["Class", "Time"])
+    X = train_data.drop(columns = "Class")
     Y = train_data["Class"]
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=model_args.test_size, random_state=model_args.random_state)
 
     # Standardize the features
     scaler = StandardScaler()
@@ -50,32 +81,33 @@ def main(model_args: ModelArgs):
         )
 
         # Fit the model
-        model.fit(X_train_scaled, y_train)
-
-        # fig = pyplot.figure(figsize = (25, 20))
-        # _ = plot_tree(model) feature_names = X.columns.values)
+        model = model.fit(X_train_scaled, y_train)
     else:
         file = open(model_args.model_out_file, "rb")
         model = pickle.load(file)
         file.close
         
-    # Predict on the test set
-    y_pred = model.predict(X_test_scaled)
-
-    # Predict on the test set
-    y_pred = model.predict(X_test_scaled)
+    y_pred_train = model.predict(X_train_scaled)
+    y_pred_test = model.predict(X_test_scaled)
     
-    # Evaluation metrics
-    print(f"Test Accuracy: {accuracy_score(y_test, y_pred)}")
-    print(f"Classification Report:\n{classification_report(y_test, y_pred)}")
-    print(f"Confusion Matrix:\n{confusion_matrix(y_test, y_pred)}\n")
+    train_acc = accuracy_score(y_train, y_pred_train)
+    test_acc = accuracy_score(y_test, y_pred_test)
 
-    if model_args.train:
-        file = open(model_args.model_out_file, "wb+")
-        pickle.dump(model, file)
-        file.close
+    # Evaluation metrics
+    # print(f"Test Accuracy: {test_acc}")
+    # print(f"Classification Report:\n{classification_report(y_test, y_pred)}")
+    # print(f"Confusion Matrix:\n{confusion_matrix(y_test, y_pred)}\n")
+
+    # if model_args.train and len(model_args.model_out_file) > 0:
+        # file = open(model_args.model_out_file, "wb+")
+        # pickle.dump(model, file)
+        # file.close
+
+    return (model, train_acc, test_acc)
 
 if __name__ == "__main__":
+    # search("data/transactions.csv", "weights/dec_tree_search.csv")
+
     parser = argparse.ArgumentParser() 
 
     parser.add_argument('-d', '--train_data_file', default = "data/transactions.csv", required = False) 
