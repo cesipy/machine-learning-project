@@ -2,6 +2,7 @@
 from utils import count_frauds, augment_train_data
 
 from dataclasses import dataclass
+from random import randint 
 import pickle
 import pandas as pd
 import argparse
@@ -24,14 +25,41 @@ class ModelArgs:
     random_state : int = None
     ccp_alpha : float = 0.0
     min_impurity_decrease : float = 0.0
+    test_size : int = 0
     train : bool = False
+
+def search(train_data_file, model_out_file):
+    highest = 0.0
+    hyp_params = None
+    model = None
+
+    for r in [randint(100, 2000000) for i in range(0, 3)]:
+        for c in ["gini", "entropy", "log_loss"]:
+            for s in ["best", "random"]:
+                for m in [None, 5, 6]:
+                    for mf in [None, 10, 20]:
+                        for ts in [0.1, 0.2, 0.3, 0.4, 0.5]:
+                            p = ModelArgs(train_data_file, "", c, s, m, mf, r, 0.0, 0.0, ts, True)
+                            print(f"Training using {p}")
+                            (curr_model, score) = main(p)
+                            if (score > highest):
+                                highest = score
+                                print(f"New Highscore: {score} using {p}")
+                                hyp_params = p
+                                model = curr_model
+
+    print(f"Highest Score {highest} using {p}")
+
+    file = open(model_out_file, "wb+")
+    pickle.dump(model, file)
+    file.close
 
 def main(model_args: ModelArgs):
     train_data = pd.read_csv(model_args.train_data_file)
 
     X = train_data.drop(columns = ["Class", "Time"])
     Y = train_data["Class"]
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=model_args.test_size, random_state=model_args.random_state)
 
     # Standardize the features
     scaler = StandardScaler()
@@ -51,9 +79,6 @@ def main(model_args: ModelArgs):
 
         # Fit the model
         model.fit(X_train_scaled, y_train)
-
-        # fig = pyplot.figure(figsize = (25, 20))
-        # _ = plot_tree(model) feature_names = X.columns.values)
     else:
         file = open(model_args.model_out_file, "rb")
         model = pickle.load(file)
@@ -65,15 +90,19 @@ def main(model_args: ModelArgs):
     # Predict on the test set
     y_pred = model.predict(X_test_scaled)
     
+    acc = accuracy_score(y_test, y_pred)
+
     # Evaluation metrics
-    print(f"Test Accuracy: {accuracy_score(y_test, y_pred)}")
+    print(f"Test Accuracy: {acc}")
     print(f"Classification Report:\n{classification_report(y_test, y_pred)}")
     print(f"Confusion Matrix:\n{confusion_matrix(y_test, y_pred)}\n")
 
-    if model_args.train:
+    if model_args.train and len(model_args.model_out_file) > 0:
         file = open(model_args.model_out_file, "wb+")
         pickle.dump(model, file)
         file.close
+
+    return (model, acc)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
