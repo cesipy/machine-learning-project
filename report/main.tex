@@ -135,7 +135,10 @@ The accuracy was about 99.959\% and the model was able to detect the frauds. Thi
 \section{Results}
 \label{sec:results}
 For the MLP model the final accuracy on the validation set was 99.9414\%, while the train accuracy is only about 98\%. 
-This rather bad accuracyon the train set is caused by the data augmentation. Nevertheless, the model is able to detect the frauds in the validatoion set, this is whats important. 
+This rather bad accuracy on the training set is caused by our simple data augmentation approach. Nevertheless, the model is able to detect the frauds in the validatoion set, this is whats important. 
+% insert train val loss
+Figure 1 shows the training loss for the MLP. In the first few iterarions the  loss is decreasing rapidly, but this trend is slowing down. This is the typical loss for a MLP. 
+
 
 
 
@@ -173,6 +176,10 @@ This theory is also supported by the structure of the decision tree as it only u
 The model is also remarkably small coming in at a little more than 2KB in pure text form.
 
 We also tried removing the timestamp from the dataset since the time of a transaction likely does not hold any information about it's fraudulance but it did not improve the model's accuracy and caused problems with the test harness on JupyterHub.
+
+The neural network approach did not work as well as expected. Although we have a high accuracy, the decision tree has better results. 
+Further testing with different numbers of hidden layers in combination with further hyperparameter tuning could
+lead to better results. Due to limited time we were not able to test this. 
 
 {\color{blue}
 \begin{itemize}
