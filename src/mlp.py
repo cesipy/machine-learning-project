@@ -5,9 +5,11 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import roc_auc_score, roc_curve
 import numpy as np
 from utils import count_frauds, augment_train_data
 import matplotlib.pyplot as plt
+import pickle
 
 # hyperparameter learned using optuna package
 # tuned params: hidden_dim, learning_rate and epochs
@@ -19,17 +21,35 @@ import matplotlib.pyplot as plt
 #     lr: 0.0004301150216793739
 #     epochs: 36
 
-EPOCHS        = 10
+EPOCHS        = 45
 BATCH_SIZE    = 32
 HIDDEN_DIM    = 94
 LEARNING_RATE = 0.0004301150216793739
+FACTOR        = 100
+WEIGHTS_PATH  = "weights/mlp.pkl"
 
-def plot_losses(losses):
-    plt.plot(range(1, EPOCHS + 1), losses, marker='o')
+def plot_metrics(losses, accuracies):
+    epochs = range(1, EPOCHS + 1)
+    
+    plt.figure(figsize=(12, 5))
+
+    #loss
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, losses, marker='o')
     plt.title('Training Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.grid(True)
+
+    #acc
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, accuracies, marker='o', color='r')
+    plt.title('Training Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.grid(True)
+
+    plt.tight_layout()
     plt.show()
 
 class TransactionModel(nn.Module):
@@ -62,6 +82,7 @@ class TransactionModel(nn.Module):
     
     def train_model(self, train_loader, optimizer, criterion):
         losses = []
+        accuracies = []
         for epoch in range(EPOCHS):
             self.train()
             running_loss = 0.0
@@ -82,9 +103,19 @@ class TransactionModel(nn.Module):
             epoch_loss = running_loss / len(train_loader)
             epoch_acc = correct / total
             losses.append(epoch_loss)
-            print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}")
+            accuracies.append(epoch_acc)
+            print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {epoch_loss:.7f}, Accuracy: {epoch_acc:.7f}")
 
-        return losses
+        return losses, accuracies
+    
+    def save_model_pkl(self, path:str):
+        with open(path, "wb") as file:
+            pickle.dump(self.state_dict(), file)
+        
+    def load_model_pkl(self, path: str):
+        with open(path, "rb") as file:
+            state_dict = pickle.load(file)
+            self.load_state_dict(state_dict)
 
 def init_model(input_dim, hidden_dim):
     model = TransactionModel(input_dim, hidden_dim)
@@ -101,7 +132,7 @@ def main():
     X_train, X_test = train_test_split(numpy_data, test_size=0.3, random_state=10)
 
     # perform data augmentation
-    X_train = augment_train_data(X_train, factor=1)
+    X_train = augment_train_data(X_train, factor=FACTOR)
     frauds_train = count_frauds(X_train)
     frauds_test = count_frauds(X_test)
     print(f"Frauds in train: {frauds_train}\nFrauds in test: {frauds_test}")
@@ -123,22 +154,35 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
  
-    losses = model.train_model(train_loader, optimizer, criterion)
-    plot_losses(losses=losses)
+    losses, accuracies = model.train_model(train_loader, optimizer, criterion)
+
+    model.save_model_pkl(WEIGHTS_PATH)
+    model.load_model_pkl(WEIGHTS_PATH)
 
     # evaluation
     model.eval()
     correct = 0
     total = 0
+    test_outputs = []
+    test_labels = []
     with torch.no_grad():
         for X_batch, y_batch in test_loader:
             outputs = model(X_batch)
             _, predicted = torch.max(outputs.data, 1)
             total += y_batch.size(0)
             correct += (predicted == y_batch).sum().item()
+            test_outputs.extend(outputs[:, 1].cpu().numpy())
+            test_labels.extend(y_batch.cpu().numpy())
 
     test_acc = correct / total
-    print(f"Test Accuracy: {test_acc:.4f}")
+    print(f"Test Accuracy: {test_acc:.7f}")
+
+    test_outputs = np.array(test_outputs)
+    test_labels = np.array(test_labels)
+    test_roc_auc = roc_auc_score(test_labels, test_outputs)
+    print(f"Test ROC AUC Score: {test_roc_auc:.7f}")
+
+    plot_metrics(losses=losses, accuracies=accuracies)
 
 if __name__ == "__main__":
     main()
