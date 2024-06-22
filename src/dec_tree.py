@@ -111,14 +111,14 @@ def main(model_args: ModelArgs, print_metrics = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser() 
 
-    parser.add_argument('-m', '--model_out_file', default = "weights/dec_tree.csv", required = False) 
+    parser.add_argument('-m', '--model_out_file', default = "weights/dec_tree.pickle", required = False) 
     parser.add_argument('-c', '--criterion', choices = ["gini", "entropy", "log_loss"], default = "gini", required = False)
     parser.add_argument('-s', '--splitter', choices = ["best", "random"], default = "best", required = False)
     parser.add_argument('-md', '--max_depth', type=int, default = None, required = False)
     parser.add_argument('-f', '--max_features', type=int, default = None, required = False)
     parser.add_argument('-r', '--random_state', type=int, default = None, required = False)
     parser.add_argument('-a', '--ccp_alpha', type=float, default = 0.0, required = False)
-    parser.add_argument('-ts', '--test_size', type=float, default = 0.2, required = False)
+    parser.add_argument('-ts', '--test_size', type=float, default = 0.3, required = False)
     parser.add_argument('-i', '--min_impurity_decrease', type=float, default = 0.0, required = False)
 
     parser.add_argument('-t', '--train', action='store_true', required = False)
