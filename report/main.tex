@@ -73,37 +73,15 @@ Matrikel Nr.: 12211124\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-{\color{blue}
-  \noindent This template outlines the sections that your report must 
-  contain. Inside each section, we provide pointers to what you should
-  write about in that section (in blue text).  \linebreak
-
-\noindent \textbf{Please remove all the text in blue in your report!
-  Your report should be 2 pages for regular teams (excluding references!)
-  and 3 pages for the three person team.}  }
-
 \section{Introduction}
 \label{sec:intro}
-The task of this project is to implement machine learning models to detect fraudulent transactoins. 
-The problem type is a binary classification task. Based on the timestamp, value of transactions and 28 features the model should predict if a transaction is fraudulent or not. 
-The dataset consists of 227845 instances with 30 features and flag indicating if the transaction is fraudulent or not. The dataset is highly imbalanced with 0.15\% % is this right??
-of the transactions being fraudulent. There is no information about the 28 features, so it is not clear what they represent. 
+The task of this project is to implement machine learning models to detect fraudulent transactions. 
+The problem type is a binary classification task. Based on the timestamp, amount and 28 additional features the model should predict if a transaction is fraudulent or not. 
+The dataset consists of 227845 instances with 30 features and flag indicating if the transaction is fraudulent or not. The dataset is highly imbalanced with 0.173\% of the transactions being fraudulent. There is no information about the 28 features, so it is not clear what they represent. 
 
-As there the dataset is labelled, we can use supervised learning to solve this problem. We decided two use two methods for this problem. 
+As there the dataset is labelled, we can use supervised learning to solve this problem. We decided two use three methods for this problem. 
 The first choice was to use a neural network for this task. Neural networks can extract the most important features from the data and are able to learn complex patterns. 
 The second chance was a decision tree. In order to achieve even better results, we also implemeted a random forest classification.
-
-
- 
-{\color{blue}
-
-\begin{itemize}
-	\item What is the nature of your task (regression/classification)? Is it about classifying types of birds, or deciding the number of cookies an employee receives?
-	\item Describe the dataset (number of features, number of instances, types of features, missing data, data imbalances, or any other relevant information).
-\end{itemize}
-}
-
 
 \section{Implementation / ML Process}
 \label{sec:methods}
@@ -114,11 +92,12 @@ This was done the following way: The dataset was split into train and validation
 Using this augmentation method it was possbile to give the frauds more weight in the train set, without changing the validation set. 
 Additionally we scaled the data using a normalization method. This functionality is achieved by calling scikit-learn's `StandardScaler`. 
 
-The timestamp in the dataset was removed as it is most likely not important. 
+% The timestamp in the dataset was removed as it is most likely not important. 
 For the problem we used two Methods: Multilayer Perceptron and Decision Tree. 
 
 \subsection{Multilayer Perceptron}
-We used a Neural Network for the classification task. The Neural Network is based on `pytorch`'s `nn.Module`. For the Network there are three layers. 
+
+The Neural Network is based on `pytorch`'s `nn.Module`. For the Network there are three layers. 
 A input layer with 30 nodes, a hidden layer with dimensionality 94 and a learning rate of 0.0004301150216793739. 
 The activation function is a ReLU function. The output layer has one node and a sigmoid activation function. % überprüfen!!
 
@@ -126,8 +105,7 @@ A Neural Network is suitable for this problem as it can learn complex patterns a
 We don't have any information about the features, so a Neural Network is a good choice. The programmer does not have to make any choices concerning the features. 
 The dataset contains labeled data, so supervised learning and thus neural networks seem a good option.
 
-
-The choice of hyperparameters was really important and made a difference. In this case the hyperparameters where factor for data augmentation, number of nodes in hidden layer, learning rate and learning epochs. 
+The choice of hyperparameters was really important and made a difference. In this case the hyperparameters where the factor used for the data augmentation, the number of nodes in the hidden layer, learning rate and learning epochs. 
 To find the best hyperparameters we used brute force method to train using randomly selected parameters. The parameters where randomly selected from a specified range. 
 Given the results the best hyperparameters where chosen. 
 The final hyperparameters are: factor for data augmentation: 50, number of nodes in hidden layer: 94, learning rate: 0.0004301150216793739, learning epochs: 36.  % TODO: adjust
@@ -135,24 +113,24 @@ The final hyperparameters are: factor for data augmentation: 50, number of nodes
 
 
 \subsection{Decision Tree}
-The Decision Tree is based on the `sklearn` library. The Decision Tree is a simple model that can be used for classification tasks. 
-\dots
-%TODO: David
+
+The Decision Tree is based on the `sklearn` library. 
+
+Decision Trees are suitable for this problem as it can easily divide the multi-dimensional space given by the amount of features into distinct sections each with a given probability of being a fraud. For this the decision 
+
+Unlike the neural network the structure of the decision tree is determined from the learning process and thus the choice of hyperparameters is by far the most important part.
+After some testing with different hyperparameters we came to the following conclusion: Most of the hyperparameters result in the decision tree predicting only non-frauds. 
+This happens because these parameters would usually expect a balanced dataset with multiple frauds per leaf and cannot work correctly with the miniscule amount of frauds.
+
+This left us with the following hyperparameters: The maximum depth of the tree, the criterion on when to split the nodes, how to split the nodes, and the maximum amount of features. 
+
+
+
+\subsection{Random Forest}
 
 Further we tested a modification of decision trees - the random forest classification. This method is based on the decision tree, but uses multiple trees to improve the accuracy. 
 The accuracy was about 99.959\% and the model was able to detect the frauds. This is about the same as the accuracy of the decision tree. 
 
-
-{\color{blue}
-
-\begin{itemize}
-	\item Did you need to pre-process the dataset (e.g. augmenting data points, extracting features, reducing the dimensionality, etc.)? If so, describe how you did this.
-	\item Specify the method (e.g. linear regression, or neural network, etc.). You do not have to describe the algorithm in detail, but rather the algorithm family and the properties of the algorithm within that family, e.g. which distance functions for a decision tree, what architecture (layers and activations) for a neural network, etc. 
-	\item State (in 2-5 lines) what makes the algorithm you chose suitable for this problem. What are the reasons for choosing your ML method over others?
-    \item If you used a method that was not covered in the VO, describe how it is different from the closest method described in the VO.
-	\item How did you choose hyperparameters (other design choices) and what are the values of the hyperparameters you chose for your final model? How did you make sure that the choice of hyperparameters works well?
-\end{itemize}
-}
 
 \section{Results}
 \label{sec:results}
@@ -161,7 +139,7 @@ This rather bad accuracyon the train set is caused by the data augmentation. Nev
 
 
 
-The decision tree impelentation has a validation accuracy of 99.96\%. The train accuracy is about... % to inset
+The decision tree has a validation accuracy of 99.96\%. The train accuracy is about... % to inset
 
 As a naive baseline predictor we present a model that only outputs 0, means no fraud. 
 Because the dataset is imbalanced and data augmentaiton does not affect the validation set there are only maximum only 0.15\% frauds in the validation set. 
@@ -184,8 +162,17 @@ Both implementations are significantly better than the naive baseline predictor.
 \section{Discussion}
 \label{sec:discuss}
 As mentioned above, our models are significantly better than a model that only predicts no fraudulent transactions.
-With an accuracy of 99.96 \% the decision tree and random forest classification are able to detect some of the frauds. 
-However as there is still  
+
+The decision tree can pretty accurately classify both fraud and non-fraud. 
+In testing it mispredicted 13 non-frauds of 45493 total and 1 frauds of 73 total.
+This results in a testing accuracy of 0.9996927735960851 which is way above the baseline predictor.
+
+A reason we think the model perfomed so well is that frauds usually have something that makes them stick out. 
+This enables the decision tree to learn which tresholds for features indicate a fraud. 
+This theory is also supported by the structure of the decision tree as it only uses about a third of the features defined in the dataset.
+The model is also remarkably small coming in at a little more than 2KB in pure text form.
+
+We also tried removing the timestamp from the dataset since the time of a transaction likely does not hold any information about it's fraudulance but it did not improve the model's accuracy and caused problems with the test harness on JupyterHub.
 
 {\color{blue}
 \begin{itemize}
@@ -198,6 +185,8 @@ However as there is still
 
 \section{Conclusion}
 \label{sec:con}
+
+For decision trees without pruning the testing accuracy is high per default since the tree can usually perfectly fit the data. 
 
 {\color{blue}
 
