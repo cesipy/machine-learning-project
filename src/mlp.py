@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from utils import count_frauds, augment_train_data
+import matplotlib.pyplot as plt
 
 # hyperparameter learned using optuna package
 # tuned params: hidden_dim, learning_rate and epochs
@@ -18,10 +19,18 @@ from utils import count_frauds, augment_train_data
 #     lr: 0.0004301150216793739
 #     epochs: 36
 
-EPOCHS        = 36
+EPOCHS        = 10
 BATCH_SIZE    = 32
 HIDDEN_DIM    = 94
 LEARNING_RATE = 0.0004301150216793739
+
+def plot_losses(losses):
+    plt.plot(range(1, EPOCHS + 1), losses, marker='o')
+    plt.title('Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.grid(True)
+    plt.show()
 
 class TransactionModel(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -36,6 +45,47 @@ class TransactionModel(nn.Module):
         x = self.fc2(x)
         return x
 
+    @staticmethod
+    def initialize_datasets(X_train, y_train, X_test, y_test):
+        # Convert to tensors
+        X_train = torch.tensor(X_train, dtype=torch.float32)
+        X_test = torch.tensor(X_test, dtype=torch.float32)
+        y_train = torch.tensor(y_train, dtype=torch.long)
+        y_test = torch.tensor(y_test, dtype=torch.long)
+
+        train_dataset = TensorDataset(X_train, y_train)
+        test_dataset = TensorDataset(X_test, y_test)
+        train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+        return train_loader, test_loader
+    
+    def train_model(self, train_loader, optimizer, criterion):
+        losses = []
+        for epoch in range(EPOCHS):
+            self.train()
+            running_loss = 0.0
+            correct = 0
+            total = 0
+            for X_batch, y_batch in train_loader:
+                optimizer.zero_grad()
+                outputs = self(X_batch)
+                loss = criterion(outputs, y_batch)
+                loss.backward()
+                optimizer.step()
+                
+                running_loss += loss.item()
+                _, predicted = torch.max(outputs.data, 1)
+                total += y_batch.size(0)
+                correct += (predicted == y_batch).sum().item()
+            
+            epoch_loss = running_loss / len(train_loader)
+            epoch_acc = correct / total
+            losses.append(epoch_loss)
+            print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}")
+
+        return losses
+
 def init_model(input_dim, hidden_dim):
     model = TransactionModel(input_dim, hidden_dim)
     return model
@@ -44,62 +94,39 @@ def main():
     df = pd.read_csv("data/transactions.csv")
     numpy_data = df.to_numpy()
 
+    # standardize the data as normal distribution
+    scaler = StandardScaler()
+    numpy_data[:, :-1] = scaler.fit_transform(numpy_data[:, :-1])
+
     X_train, X_test = train_test_split(numpy_data, test_size=0.3, random_state=10)
 
-    X_train = augment_train_data(X_train, factor=50)
+    # perform data augmentation
+    X_train = augment_train_data(X_train, factor=1)
     frauds_train = count_frauds(X_train)
-    frauds_test  = count_frauds(X_test)
-    print(f"frauds in train: {frauds_train}\nfrauds in test: {frauds_test}")
+    frauds_test = count_frauds(X_test)
+    print(f"Frauds in train: {frauds_train}\nFrauds in test: {frauds_test}")
 
-    print(f"train: {len(X_train)},\ntest {len(X_test)}")
+    print(f"Train samples: {len(X_train)}, Test samples: {len(X_test)}")
 
+    # Separate features and labels
     y_train = X_train[:, -1].astype(int)
-    X_train = X_train[:, :-1] 
+    X_train = X_train[:, :-1]
     y_test = X_test[:, -1].astype(int)
-    X_test = X_test[:, :-1] 
-
-    
-    # convert to tensros
-    X_train = torch.tensor(X_train, dtype=torch.float32)
-    X_test = torch.tensor(X_test, dtype=torch.float32)
-    y_train = torch.tensor(y_train, dtype=torch.long)
-    y_test = torch.tensor(y_test, dtype=torch.long)
-
-
-    train_dataset = TensorDataset(X_train, y_train)
-    test_dataset = TensorDataset(X_test, y_test)
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    X_test = X_test[:, :-1]
 
     input_dim = X_train.shape[1]
     model = init_model(input_dim, HIDDEN_DIM)
+
+    #init dataset loaders
+    train_loader, test_loader = TransactionModel.initialize_datasets(X_train, y_train, X_test, y_test)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+ 
+    losses = model.train_model(train_loader, optimizer, criterion)
+    plot_losses(losses=losses)
 
-   # training
-    for epoch in range(EPOCHS):
-        model.train()
-        running_loss = 0.0
-        correct = 0
-        total = 0
-        for X_batch, y_batch in train_loader:
-            optimizer.zero_grad()
-            outputs = model(X_batch)
-            loss = criterion(outputs, y_batch)
-            loss.backward()
-            optimizer.step()
-            
-            running_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-            total += y_batch.size(0)
-            correct += (predicted == y_batch).sum().item()
-        
-        epoch_loss = running_loss / len(train_loader)
-        epoch_acc = correct / total
-        print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}")
-
-    # eval
+    # evaluation
     model.eval()
     correct = 0
     total = 0
