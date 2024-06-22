@@ -12,8 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-from matplotlib import pyplot
-
 @dataclass
 class ModelArgs:
     model_out_file : str
