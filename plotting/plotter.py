@@ -8,7 +8,7 @@ def create_grouped_bar_plots_from_csv(csv_file, output_file):
     data = pd.read_csv(csv_file)
     
     # Group by 'criterion' and 'splitter'
-    grouped = data.groupby(['criterion', 'splitter'])
+    grouped = data.groupby(['criterion', 'splitter', 'test_size'])
     
     # Number of unique groups
     num_groups = len(grouped)
@@ -28,7 +28,7 @@ def create_grouped_bar_plots_from_csv(csv_file, output_file):
         axes = [axes]
     
     # Iterate over each group and create a bar plot for each
-    for group_index, ((criterion, splitter), group_data) in enumerate(grouped):
+    for group_index, ((criterion, splitter, test_size), group_data) in enumerate(grouped):
         # Extract train and test accuracies for the current group
         train_acc = group_data['train_acc']
         test_acc = group_data['test_acc']
@@ -46,10 +46,10 @@ def create_grouped_bar_plots_from_csv(csv_file, output_file):
         
         # Add labels and title
         axes[group_index].set_ylabel('Accuracy', fontweight='bold')
-        axes[group_index].set_title(f'Criterion: {criterion}, Splitter: {splitter}')
+        axes[group_index].set_title(f'Criterion: {criterion}\nSplitter: {splitter}')
         
         # Add x-tick labels with the values of the given columns
-        x_labels = [f'{"None" if math.isnan(row["max_depth"]) else int(row["max_depth"])}, {"None" if math.isnan(row["max_features"]) else int(row["max_features"])}, {row["test_size"]}' for _, row in group_data.iterrows()]
+        x_labels = [f'{"None" if math.isnan(row["max_depth"]) else int(row["max_depth"])}, {"None" if math.isnan(row["max_features"]) else int(row["max_features"])}, {row["ccp_alpha"]}, {row["min_impurity_decrease"]}' for _, row in group_data.iterrows()]
         axes[group_index].set_xticks([r + bar_width / 2 for r in range(len(train_acc))])
         axes[group_index].set_xticklabels(x_labels, rotation=45, ha='right')
         
@@ -67,7 +67,6 @@ def create_grouped_bar_plots_from_csv(csv_file, output_file):
     plt.savefig(output_file)
     plt.close()
 
-# Example usage
-csv_file = 'search_results.csv'  # Replace with your CSV file path
-output_file = 'accuracy_plot.png'  # Replace with your desired output file path
+csv_file = 'search_results.csv'
+output_file = 'accuracy_plot.png'
 create_grouped_bar_plots_from_csv(csv_file, output_file)
