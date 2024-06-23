@@ -114,12 +114,14 @@ The final hyperparameters are: factor for data augmentation: 100, number of node
 
 The Decision Tree is based on the `sklearn` library. 
 
-Decision Trees are suitable for this problem as it can easily divide the multi-dimensional space given by the amount of features into distinct sections each with a given probability of being a fraud. For this the decision 
+Decision Trees are suitable for this problem as it can easily divide the multi-dimensional space given by the amount of features into distinct sections each with a given probability of being a fraud.
+We thought that frauds would usually have some feature that would spike in comparision to a normal transaction which the decision tree could very easily use to divide the space of frauds and non-frauds.
 
-
-This left us with the following hyperparameters: The maximum depth of the tree, the criterion on when to split the nodes, how to split the nodes, and the maximum amount of features. 
-
-
+Choosing the hyperparameters is the most important part of training a decision tree, since the learning process determines the structure of the decision tree.
+We choose to ignore the "minimum amount of samples per split/leaf", "maximum leaf nodes" and "minimum weight fraction leaf" hyperparameters since it did not return any good results because of the small amount of frauds.
+We choose a brute-force approach after doing some experimenting on what values are even sensible to use for the remaining hyperparameters.
+The final hyperparameters are: Criterion: gini, Splitter: best, Max Depth: None, Max Features: 15, CCP Alpha: 0.0, Min Impurity Decrease: 1e-05, Random State: 25939.
+The train\_test\_split method was also supplied the same random state as the decision tree for this experimentation.
 
 \subsection{Random Forest}
 
@@ -141,49 +143,43 @@ The figure below shows the training loss for the MLP. In the first few iteration
 
 Using the test set on the JupyterHub, which consisted of different data, showed only ROC. The ROC for the train set was 99.2065\%, and the test score was 98.7157\%. This is a solid result.
 
-The decision tree has a validation accuracy of 99.96\%. The train accuracy is about... % to insert
+The decision tree was also trained using a 30\%/70\% Train/Test split.
+The decision tree has a validation accuracy of 99.96\%. The train accuracy is about 99.96865\%. This indicates that the decision tree is able to accurately predict frauds over the whole dataset.
+
+From the confusion matrixes of the test set we can see that it only mislabelled 4 of 116 frauds and 23 of 68238 non-frauds.
+
+Following is a picture of the decision trees performance on training and test set with various different configurations of the hyperparameters. The plots are grouped by the 'Criterion' and 'Splitter' parameters and on the X-Axis you can see the choices for 'max\_depth', 'max\_features', 'ccp\_alpha' and 'min\_impurity\_decrease' in that order respectively:
+
+\begin{center}
+  \includegraphics[width=8.5cm]{../data/accuracy_plot.png} \label{accuracy-plot}
+\end{center}
+
+As you can see if no pruning and tree limitations are specified the tree can get a 100\% accuracy on the training set by overfitting the training data perfectly.
+In the plot in the top right subplot you can see the best-performing models as bar 6, 8, 14 and 16. All of these hyperparameter configurations resulted in the same decision tree. 
+They all have the "gini"-Criterion, "best"-Splitter and "min\_impurity\_decrease" in common. 
+In future experimentation one could focus in more on training using these values and varying the values of the other hyperparameters.
 
 As a naive baseline predictor, we present a model that only outputs 0, meaning no fraud. 
 Because the dataset is imbalanced and data augmentation does not affect the validation set, there are only a maximum of 0.15\% frauds in the validation set. 
-Thus, the naive predictor has an accuracy of at least 99.85\%. 
+Thus, the naive predictor has an accuracy of at least 99.85\%. For the ROC score the naive predictor has a 50\%/50\% chance to predict the correct classification.
 Both implementations are significantly better than the naive baseline predictor. The decision tree and random forest classification can detect frauds.
-
-{\color{blue}
-\begin{itemize}
-	\item Describe the performance of your model (in terms of the metrics for your dataset) on the training and validation sets with the help of plots or/and tables.
-	\item You must provide at least two separate visualizations
-          (plot or tables) of different things, i.e. don’t use a table
-          and a bar plot of the same metrics. At least three
-           visualizations are required for the 3 person team.
-\end{itemize}
-}
 
 \section{Discussion}
 \label{sec:discuss}
 As mentioned above, our models are significantly better than a model that only predicts no fraudulent transactions.
 
-The decision tree can pretty accurately classify both fraud and non-fraud. 
-In testing it mispredicted 13 non-frauds of 45493 total and 1 frauds of 73 total.
-This results in a testing accuracy of 0.9996927735960851 which is way above the baseline predictor.
-
-A reason we think the model perfomed so well is that frauds usually have something that makes them stick out. 
-This enables the decision tree to learn which tresholds for features indicate a fraud. 
-This theory is also supported by the structure of the decision tree as it only uses about a third of the features defined in the dataset.
-The model is also remarkably small, coming in at a little more than 2KB in pure text form.
-
-We also tried removing the timestamp from the dataset since the time of a transaction likely does not hold any information about its fraudulence, but it did not improve the model's accuracy and caused problems with the test harness on JupyterHub.
+A reason we think the decision tree perfomed so well is that frauds usually have something that makes them stick out. 
+This enables the decision tree to learn which tresholds for which features indicate a fraud. 
+This theory is also supported by the structure of the decision tree as it only uses about a third of the features defined in the dataset, indicating that these features spike when there is a high likelyhood of a fraud.
+The model is also remarkably small, coming in at a little more than 2KB in pure text form or 6KB as a pickle jar.
 
 The neural network approach did not work as well as the decision tree on the train and validation set. However, the ROC for the dataset on the JupyterHub was really good and even better than the decision tree.
  This could have been improved by further hyperparameter optimization as well as experimenting with more hidden layers. The model size is also notably small with only 14 KB as a pickle jar. 
 
 
-{\color{blue}
-\begin{itemize}
-	\item Analyze the results presented in the report (comment on what contributed to the good or bad results). If your method does not work well, try to analyze why this is the case.
-	\item Describe very briefly what you tried but did not keep for your final implementation (e.g. things you tried but that did not work, discarded ideas, etc.).
-	\item How could you try to improve your results? What else would you want to try?
-\end{itemize}
-}
+We also tried removing the timestamp from the dataset since the time of a transaction likely does not hold any information about its fraudulence, but it did not improve the model's accuracy and caused problems with the test harness on JupyterHub.
+
+For the decision tree we also tried varying the test/train split but this did not seem to improve the model accuracy and only elongated the searching process.
 
 \section{Conclusion}
 \label{sec:con}
@@ -195,19 +191,6 @@ Our main takeaway was the contrast between traditional coding and machine learni
 Machine learning involves lots of trial and error to identify the right model and optimal hyperparameters. 
 While theoretical knowledge is essential for building a foundational understanding of the model and knowing which techniques to apply, 
 experimenting with different configurations is crucial.
-
-{\color{blue}
-
-%{\color{blue}
-%\begin{itemize}
-%  \item Finally, describe the test-set performance you achieved. Do not optimize your method based on the test set performance!
-%  \item Write a 5-10 line paragraph describing the main takeaway of your project.
-%  \end{itemize}
-%  \end{itemize}
-%
-%\end{itemize}
-
-%}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

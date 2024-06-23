@@ -97,6 +97,12 @@ def main(model_args: ModelArgs, print_metrics = False):
 
     # Evaluation metrics
     if print_metrics:
+        print(f"Train Accuracy: {train_acc}")
+        print(f"Classification Report:\n{classification_report(y_train, y_pred_train)}")
+        print(f"Confusion Matrix:\n{confusion_matrix(y_train, y_pred_train)}\n")
+
+        print()
+
         print(f"Test Accuracy: {test_acc}")
         print(f"Classification Report:\n{classification_report(y_test, y_pred_test)}")
         print(f"Confusion Matrix:\n{confusion_matrix(y_test, y_pred_test)}\n")
