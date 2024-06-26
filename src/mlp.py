@@ -10,6 +10,7 @@ import numpy as np
 import utils
 import matplotlib.pyplot as plt
 import pickle
+import argparse
 
 # hyperparameter learned using optuna package
 # tuned params: hidden_dim, learning_rate and epochs
@@ -19,7 +20,7 @@ import pickle
 #   Params: 
 #     hidden_dim: 94
 #     lr: 0.0004301150216793739
-#     epochs: 36
+#     epochs: 45
 
 EPOCHS        = 45
 BATCH_SIZE    = 32
@@ -27,6 +28,7 @@ HIDDEN_DIM    = 94
 LEARNING_RATE = 0.0004301150216793739
 FACTOR        = 100
 WEIGHTS_PATH  = "weights/mlp.pkl"
+
 
 def plot_metrics(losses, accuracies):
     epochs = range(1, EPOCHS + 1)
@@ -121,7 +123,7 @@ def init_model(input_dim, hidden_dim):
     model = TransactionModel(input_dim, hidden_dim)
     return model
 
-def main():
+def main(args):
     df = pd.read_csv("data/transactions.csv")
     numpy_data = df.to_numpy()
 
@@ -132,14 +134,20 @@ def main():
 
     #init dataset loaders
     train_loader, test_loader = TransactionModel.initialize_datasets(X_train, y_train, X_test, y_test)
+
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
- 
-    losses, accuracies = model.train_model(train_loader, optimizer, criterion)
+     
+    if args.train:
+        losses, accuracies = model.train_model(train_loader, optimizer, criterion)
 
-    model.save_model_pkl(WEIGHTS_PATH)
+        model.save_model_pkl(WEIGHTS_PATH)
+        
+        
     model.load_model_pkl(WEIGHTS_PATH)
+    
+
 
     # evaluation
     model.eval()
@@ -164,7 +172,12 @@ def main():
     test_roc_auc = roc_auc_score(test_labels, test_outputs)
     print(f"Test ROC AUC Score: {test_roc_auc:.7f}")
 
-    plot_metrics(losses=losses, accuracies=accuracies)
+    if args.train:
+        plot_metrics(losses=losses, accuracies=accuracies)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train", action="store_true", help="Train the model")
+    parser.add_argument("--test", action="store_true", help="Test the model")
+    args = parser.parse_args()
+    main(args)

@@ -99,7 +99,7 @@ For the problem, we used two methods: Multilayer Perceptron and Decision Tree.
 
 The neural network is based on `pytorch`'s `nn.Module`. For the network, there are three layers: 
 an input layer with 30 nodes, a hidden layer with a dimensionality of 94, and a learning rate of 0.0004301150216793739. 
-The activation function is a ReLU function. The output layer has one node and a sigmoid activation function.
+The activation fuction fpr the first fully connected layer is the ReLU activation function. Additionally the Adam optimizer was used, that opptimized the cross entropy loss. 
 
 A neural network is suitable for this problem as it can learn complex patterns and extract the most important features from the data. 
 We don't have any information about the features, so a neural network is a good choice. The programmer does not have to make any choices concerning the features. 
@@ -134,17 +134,18 @@ During the training of the MLP model, the dataset was split into a training set 
 
 The final accuracy achieved on the training set was 99.9999\%, demonstrating excellent performance in learning from the data. On the validation set, the model achieved an accuracy of 99.9415\%, indicating robust generalization to unseen data.
 
-Moreover, the ROC AUC score obtained on the validation set was 96.62923\%. This metric signifies the model's ability to distinguish between fraudulent and legitimate transactions, with an accuracy of detecting approximately 96.62923\% of fraudulent activities.
+Moreover, the ROC AUC score obtained on the validation set was 96.62923\%. This metric signifies the model's ability to distinguish between fraudulent and legitimate transactions, with an accuracy of detecting approximately 96\% of fraudulent activities.
 
 The figure below shows the training loss for the MLP. In the first few iterations, the loss is decreasing rapidly, but this trend slows down. This is the typical loss curve for an MLP. 
 \begin{center}
   \includegraphics[width=8.5cm]{../data/mlp-plot.png} \label{mlp-plot}
 \end{center}
 
-Using the test set on the JupyterHub, which consisted of different data, showed only ROC. The ROC for the train set was 99.2065\%, and the test score was 98.7157\%. This is a solid result.
+Using the test set on the JupyterHub, which consisted of different data, showed only ROC. The ROC for the train set was 99.5725\%, and the test score was 98.524\%. This is a solid result.
 
 The decision tree was also trained using a 30\%/70\% Train/Test split.
-The decision tree has a validation accuracy of 99.96\%. The train accuracy is about 99.96865\%. This indicates that the decision tree is able to accurately predict frauds over the whole dataset.
+The decision tree has a validation accuracy of 99.96\%. The train accuracy is about 99.96865\%. This indicates that the decision tree is able to accurately predict frauds over the whole dataset. 
+The ROC AUG score for the decision tree on the dataset on the JupyterHub was approximately 85\% for the train and test set. 
 
 From the confusion matrixes of the test set we can see that it only mislabelled 4 of 116 frauds and 23 of 68238 non-frauds.
 
@@ -174,7 +175,7 @@ This theory is also supported by the structure of the decision tree as it only u
 The model is also remarkably small, coming in at a little more than 2KB in pure text form or 6KB as a pickle jar.
 
 The neural network approach did not work as well as the decision tree on the train and validation set. However, the ROC for the dataset on the JupyterHub was really good and even better than the decision tree.
- This could have been improved by further hyperparameter optimization as well as experimenting with more hidden layers. The model size is also notably small with only 14 KB as a pickle jar. 
+This could have been improved by further hyperparameter optimization as well as experimenting with more hidden layers. The model size is also notably small with only 14 KB as a pickle jar. 
 
 
 We also tried removing the timestamp from the dataset since the time of a transaction likely does not hold any information about its fraudulence, but it did not improve the model's accuracy and caused problems with the test harness on JupyterHub.
