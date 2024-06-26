@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score, roc_curve
 import numpy as np
-from utils import count_frauds, augment_train_data
+import utils
 import matplotlib.pyplot as plt
 import pickle
 
@@ -125,25 +125,7 @@ def main():
     df = pd.read_csv("data/transactions.csv")
     numpy_data = df.to_numpy()
 
-    # standardize the data as normal distribution
-    scaler = StandardScaler()
-    numpy_data[:, :-1] = scaler.fit_transform(numpy_data[:, :-1])
-
-    X_train, X_test = train_test_split(numpy_data, test_size=0.3, random_state=10)
-
-    # perform data augmentation
-    X_train = augment_train_data(X_train, factor=FACTOR)
-    frauds_train = count_frauds(X_train)
-    frauds_test = count_frauds(X_test)
-    print(f"Frauds in train: {frauds_train}\nFrauds in test: {frauds_test}")
-
-    print(f"Train samples: {len(X_train)}, Test samples: {len(X_test)}")
-
-    # Separate features and labels
-    y_train = X_train[:, -1].astype(int)
-    X_train = X_train[:, :-1]
-    y_test = X_test[:, -1].astype(int)
-    X_test = X_test[:, :-1]
+    X_train, X_test, y_train, y_test = utils.preprocess_data(numpy_data, factor=FACTOR)
 
     input_dim = X_train.shape[1]
     model = init_model(input_dim, HIDDEN_DIM)
